@@ -13,7 +13,10 @@ public class Program
 
         // Add services to the container.
 
-        builder.Services.AddControllers();
+        builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
+        {
+            options.SuppressModelStateInvalidFilter = true;
+        });
 
         builder.Services.AddDbContext<CompanyContext>(options =>
             options.UseSqlServer("Data Source=DESKTOP-KK73L52;Initial Catalog=testWebApi;Integrated Security=True;"));
@@ -33,7 +36,7 @@ public class Program
             });
         });
 
-        /*builder.Services.AddCors(options =>
+        builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowAll", builder =>
             {
@@ -41,8 +44,8 @@ public class Program
                        .AllowAnyMethod()
                        .AllowAnyHeader();
             });
-        });*/
-
+        });
+        //try different way
         /*builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowAll", builder =>
