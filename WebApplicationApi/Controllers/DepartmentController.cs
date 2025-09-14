@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WebApplicationApi.Models;
 
@@ -11,6 +12,7 @@ namespace WebApplicationApi.Controllers
         CompanyContext Company = new CompanyContext();
 
         [HttpGet]
+        [Authorize]
         public IActionResult GetAllDepartments()
         {
             var departments = Company.Departments.ToList();

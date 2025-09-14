@@ -1,5 +1,9 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
 using WebApplicationApi.Models;
 
 namespace WebApplicationApi;
@@ -13,7 +17,8 @@ public class Program
 
         // Add services to the container.
 
-        builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
+        builder.Services.AddControllers()
+            .ConfigureApiBehaviorOptions(options =>
         {
             options.SuppressModelStateInvalidFilter = true;
         });
@@ -34,6 +39,31 @@ public class Program
                 Title = "ASP.NET 9 Web API",
                 Description = " Steps Project"
             });
+
+            swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Enter 'Bearer' [space] and then your validation token code in the text input below.\r\n\r\nExample: \"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\""
+            });
+
+            swagger.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string [] {}
+                }
+            });
         });
 
         builder.Services.AddCors(options =>
@@ -45,6 +75,7 @@ public class Program
                        .AllowAnyHeader();
             });
         });
+
         //try different way
         /*builder.Services.AddCors(options =>
         {
@@ -55,6 +86,30 @@ public class Program
                           .AllowAnyHeader();
             });
         });*/
+
+        builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+            .AddEntityFrameworkStores<CompanyContext>();
+        //.AddDefaultTokenProviders();
+
+        builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
+            {
+                options.SaveToken = true;
+                options.RequireHttpsMetadata = false;
+                options.TokenValidationParameters = new()
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = builder.Configuration["JWT:Iss"],
+                    ValidateAudience = true,
+                    ValidAudience = builder.Configuration["JWT:Aud"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]))
+                };
+            }
+        );
 
         var app = builder.Build();
 
